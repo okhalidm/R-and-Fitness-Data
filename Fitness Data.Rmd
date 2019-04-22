@@ -1,0 +1,145 @@
+---
+title: "Fitness Data, Week 7"
+author: "Omar Khalid, Ph.D."
+date: "7/18/2018"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+
+## Read in and explore data
+
+setwd("~/Desktop/Omar COH/R class/Week 7")
+dat1 = read.csv("week7_dataset_v3.csv")
+
+head(dat1)
+
+
+plot(dat1$Miles, dat1$Total_kcal)
+hist(dat1$Total_kcal)
+hist(d)
+table(dat1$Exercise_Type, dat1$Day_2)
+
+## build boxplots
+
+boxplot(split(dat1$Calories_Burned, dat1$Day_2))
+
+boxplot(split(dat1$Calories_Burned, dat1$Month))
+
+boxplot(split(dat1$Calories_Burned, dat1$Week))
+
+o <- ordered(dat1$Day_2, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+boxplot(dat1$Calories_Burned~o)
+boxplot(dat1$Total_kcal~o)
+
+par(mfrow=c(1,2))
+boxplot(dat1$Calories_Burned~o, main="Calories Burned", ylab="Calories", las=2, col="lightblue")
+boxplot(dat1$Total_kcal~o, main = "Total Calories", las =2, col="pink")
+
+par(mfrow=c(1,1))
+
+## melting data and using ggplot2
+
+dat2 = dat1[c(5,38,30)]
+
+require(reshape2)
+dat1m <- melt(dat2, id.var="Day_2")
+unique(dat1m$variable)
+
+library(ggplot2)
+ggplot(data = dat1m, aes(x=variable, y=value)) + geom_boxplot(aes(fill=Day_2))
+
+ggplot(data = dat1m, aes(x=Day_2, y=value)) + geom_boxplot(aes(fill=variable))
+
+library(lattice)
+bwplot(Week ~ Calories_Burned, data=dat1)
+
+o1 <- ordered(dat1$Month, levels = c("January","February","March"))
+boxplot(dat1$Total_kcal~o1, ylab = "Total Calories")
+
+boxplot(dat1$Calories_Burned~o1)
+
+
+## adding plots on top of each other
+
+plot(dat1$Date, dat1$Total_kcal, ylim=c(0,5000))
+abline(h=mean(dat1$Total_kcal), col="red")
+plot(dat1$Date, dat1$Calories_Burned, add=T)
+abline(h=mean(dat1$Calories_Burned), col = "blue")
+text(20,800,"Calories Burned")
+text(20,3300, "Total Calories")
+abline(h=2100, col ="black")
+text(20,1900,"BMR")
+
+
+##time series object
+
+x <- dat1$Total_kcal
+
+t <- ts(data = x, start=1, frequency = 1)
+plot(t,ylab="Calories",xlab="Days")
+
+t <- ts(data = x, start=1, frequency = 7)
+plot(t,ylab="Calories",xlab="Weeks")
+abline(reg=lm(t~time(t)), col="red")
+abline(h = mean(x), col="blue")
+
+aggregate(t)
+aggregate(t, FUN=mean)
+plot(aggregate(t), ylim = c(0,20000))
+boxplot(t)
+boxplot(t~cycle(t))
+
+
+cycle(t)
+decompose(t)
+
+plot(decompose(t))
+
+y <- dat1$Calories_Burned
+t1 <- ts(data = y, start =1, frequency = 7)
+boxplot(t1~cycle(t1))
+
+
+ts.plot(t,t1, col=c("blue","red"))
+
+ts.plot(aggregate(t), aggregate(t1), col = c("blue","red"))
+
+table(dat1$Exercise_Type)
+table(dat1$Exercise_Type, dat1$Month)
+
+
+
+summary(t)
+summary(t1)
+
+
+## building scatterplots and for loops
+
+
+plot(dat1$Total_kcal, dat1$Breakfast_kcal, xlab="Total Calories", ylab = "Breakfast Calories", pch =19, col = "blue")
+
+lm(dat1$Breakfast_kcal ~ dat1$Total_kcal)
+
+abline(lm(dat1$Breakfast_kcal ~ dat1$Total_kcal), lwd=3, lty=2)
+
+
+
+x <- unique(dat1$Day_2)
+y <- as.character(t(x))
+for (i in y) {
+temp <- subset(dat1, dat1$Day_2 == i)
+plot(temp$Total_kcal, temp$Breakfast_kcal, xlab = "Total Calories", ylab = "Breakfast Calories",
+main = paste(i), col = "blue", pch = 19)
+abline(lm(temp$Breakfast_kcal ~ temp$Total_kcal), lwd=3, lty=2)
+}
+
+
+z <- seq(6,35,1)
+for (i in z) {
+plot(dat1$Total_kcal, dat1[,c(i)], xlab = "Total Calories", ylab = paste(names(dat1[c(i)])), col = "blue", pch = 19)
+abline(lm(dat1[,c(i)] ~ dat1$Total_kcal), lwd=3, lty=2)
+}
+
